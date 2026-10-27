@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Cloud File Sync</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #ccd3dc;
+        }
+
+        h1 {
+            text-align: center;
+            color: #174ea6;
+        }
+
+        .description {
+            text-align: center;
+            color: #555;
+        }
+
+        .upload-box {
+            border: 2px dashed #4285f4;
+            padding: 25px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+
+        button {
+            background: #1769e0;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #104da5;
+        }
+
+        .sync {
+            background: #18864b;
+        }
+
+        .status {
+            background: #e8f5e9;
+            padding: 12px;
+            border-radius: 6px;
+            color: #176b37;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #e8efff;
+        }
+
+        .delete {
+            background: #d93025;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px;
+            }
+
+            th, td {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>☁ Distributed Cloud File Sync</h1>
+
+    <p class="description">
+        Upload, manage and synchronize your files.
+    </p>
+
+    <div class="status" id="status">
+        Status: System ready
+    </div>
+
+    <div class="upload-box">
+        <h3>Select Files to Upload</h3>
+
+        <input type="file" id="fileInput" multiple>
+
+        <br><br>
+
+        <button onclick="uploadFiles()">Upload Files</button>
+
+        <button class="sync" onclick="syncFiles()">
+            Synchronize Files
+        </button>
+    </div>
+
+    <h2>Stored Files</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Size</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody id="fileList">
+            <tr>
+                <td colspan="3">No files uploaded yet.</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+    let files = [];
+
+    function uploadFiles() {
+        const input = document.getElementById("fileInput");
+        const selectedFiles = Array.from(input.files);
+
+        if (selectedFiles.length === 0) {
+            alert("Please select at least one file.");
+            return;
+        }
+
+        selectedFiles.forEach(file => {
+            files.push({
+                id: Date.now() + Math.random(),
+                name: file.name,
+                size: file.size,
+                data: file
+            });
+        });
+
+        displayFiles();
+
+        document.getElementById("status").textContent =
+            "Status: Files added successfully.";
+
+        input.value = "";
+    }
+
+    function displayFiles() {
+        const list = document.getElementById("fileList");
+        list.innerHTML = "";
+
+        if (files.length === 0) {
+            list.innerHTML =
+                '<tr><td colspan="3">No files uploaded yet.</td></tr>';
+            return;
+        }
+
+        files.forEach(file => {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = file.name;
+
+            const sizeCell = document.createElement("td");
+            sizeCell.textContent =
+                (file.size / 1024).toFixed(2) + " KB";
+
+            const actionCell = document.createElement("td");
+
+            const downloadButton = document.createElement("button");
+            downloadButton.textContent = "Download";
+            downloadButton.onclick = () => downloadFile(file.id);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.className = "delete";
+            deleteButton.onclick = () => deleteFile(file.id);
+
+            actionCell.append(downloadButton, deleteButton);
+            row.append(nameCell, sizeCell, actionCell);
+            list.appendChild(row);
+        });
+    }
+
+    function downloadFile(id) {
+        const file = files.find(item => item.id === id);
+
+        if (!file) return;
+
+        const url = URL.createObjectURL(file.data);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = file.name;
+        link.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    function deleteFile(id) {
+        files = files.filter(file => file.id !== id);
+        displayFiles();
+
+        document.getElementById("status").textContent =
+            "Status: File removed from the current session.";
+    }
+
+    function syncFiles() {
+        displayFiles();
+
+        document.getElementById("status").textContent =
+            "Status: File list synchronized successfully.";
+    }
+</script>
+
+</body>
+</html>
